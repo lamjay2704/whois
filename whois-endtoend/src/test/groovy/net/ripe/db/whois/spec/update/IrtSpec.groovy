@@ -4,6 +4,7 @@ import net.ripe.db.whois.common.IntegrationTest
 import net.ripe.db.whois.spec.BaseQueryUpdateSpec
 import net.ripe.db.whois.spec.domain.AckResponse
 import net.ripe.db.whois.spec.domain.Message
+import spock.lang.Ignore;
 
 @org.junit.experimental.categories.Category(IntegrationTest.class)
 class IrtSpec extends BaseQueryUpdateSpec {
@@ -598,6 +599,78 @@ class IrtSpec extends BaseQueryUpdateSpec {
         ack.successes.any { it.operation == "Modify" && it.key == "[irt] irt-test" }
 
         !queryMatches("-r -T irt irt-tesT", "abuse-mailbox")
+    }
+
+    @Ignore("TODO: [ES] no referential integrity between encryption attribute and referenced key-cert")
+    def "delete PGP key-cert, referenced from IRT encryption attribute"() {
+        given:
+            syncUpdate("""\
+                irt:           irt-test
+                address:       RIPE NCC
+                e-mail:        irt-dbtest@ripe.net
+                encryption:    PGPKEY-D83C3FBD
+                auth:          MD5-PW \$1\$qxm985sj\$3OOxndKKw/fgUeQO7baeF/  #irt
+                admin-c:       TP1-TEST
+                tech-c:        TP1-TEST
+                mnt-by:        OWNER-MNT
+                source:        TEST
+
+                password: owner
+                password: irt
+                """.stripIndent()
+        )
+
+        expect:
+            queryObject("-r -T irt irt-tesT", "irt", "irt-test")
+
+        when:
+            def response = syncUpdate(oneBasicFixture("KC") + "password: owner\ndelete: reason")
+
+        then:
+        def ack = new AckResponse("", response)
+
+        ack.summary.nrFound == 1
+        ack.summary.assertSuccess(0, 0, 0, 0, 0)
+        ack.summary.assertErrors(1, 0, 0, 1)
+        ack.countErrorWarnInfo(1, 0, 0)
+        ack.errorMessagesFor("Delete", "[key-cert] PGPKEY-D83C3FBD") ==
+                ["Object [key-cert] PGPKEY-D83C3FBD is referenced from other objects"]
+    }
+
+    @Ignore("TODO: [ES] no referential integrity between signature attribute and referenced key-cert")
+    def "delete PGP key-cert, referenced from IRT signature attribute"() {
+        given:
+            syncUpdate("""\
+                irt:           irt-test
+                address:       RIPE NCC
+                e-mail:        irt-dbtest@ripe.net
+                signature:     PGPKEY-D83C3FBD
+                auth:          MD5-PW \$1\$qxm985sj\$3OOxndKKw/fgUeQO7baeF/  #irt
+                admin-c:       TP1-TEST
+                tech-c:        TP1-TEST
+                mnt-by:        OWNER-MNT
+                source:        TEST
+
+                password: owner
+                password: irt
+                """.stripIndent()
+        )
+
+        expect:
+            queryObject("-r -T irt irt-tesT", "irt", "irt-test")
+
+        when:
+            def response = syncUpdate(oneBasicFixture("KC") + "password: owner\ndelete: reason")
+
+        then:
+        def ack = new AckResponse("", response)
+
+        ack.summary.nrFound == 1
+        ack.summary.assertSuccess(0, 0, 0, 0, 0)
+        ack.summary.assertErrors(1, 0, 0, 1)
+        ack.countErrorWarnInfo(1, 0, 0)
+        ack.errorMessagesFor("Delete", "[key-cert] PGPKEY-D83C3FBD") ==
+                ["Object [key-cert] PGPKEY-D83C3FBD is referenced from other objects"]
     }
 
 }
