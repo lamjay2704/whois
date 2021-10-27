@@ -6,8 +6,8 @@ import org.apache.lucene.analysis.CharArraySet;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.core.LowerCaseFilter;
 import org.apache.lucene.analysis.core.StopFilter;
-import org.apache.lucene.analysis.core.WhitespaceTokenizer;
 import org.apache.lucene.analysis.miscellaneous.WordDelimiterGraphFilter;
+import org.apache.lucene.analysis.standard.ClassicTokenizer;
 
 import java.util.List;
 
@@ -29,7 +29,8 @@ public class FullTextAnalyzer extends Analyzer {
 
     @Override
     protected TokenStreamComponents createComponents(final String fieldName) {
-        final WhitespaceTokenizer tokenizer = new WhitespaceTokenizer();
+        final ClassicTokenizer tokenizer = new ClassicTokenizer();
+        //final WhitespaceTokenizer tokenizer = new WhitespaceTokenizer();
 
         final CharArraySet stopSet = new CharArraySet(STOP_WORDS.size(), true);
         stopSet.addAll(STOP_WORDS);
