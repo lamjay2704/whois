@@ -21,6 +21,11 @@ public class StreamingHelper {
             for (final String accept : COMMA_SPLITTER.split(acceptHeader)) {
                 try {
                     final MediaType mediaType = MediaType.valueOf(accept);
+
+                    if(MediaType.TEXT_PLAIN_TYPE.equals(mediaType)) {
+                        return new StreamingMarshalTextPlain(outputStream); //TODO
+                    }
+
                     final String subtype = mediaType.getSubtype().toLowerCase();
                     if (subtype.equals("json") || subtype.endsWith("+json")) {
                         return new StreamingMarshalJson(outputStream);

@@ -94,6 +94,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.startsWith;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -293,7 +294,7 @@ public class WhoisRestServiceTestIntegration extends AbstractIntegrationTest {
     }
 
     @Test
-    public void lookup_inet6num_without_prefix_length() throws InterruptedException {
+    public void lookup_inet6num_without_prefix_length() {
         databaseHelper.addObject(
                 "inet6num:       2001:2002:2003::/48\n" +
                 "netname:        RIPE-NCC\n" +
@@ -332,6 +333,51 @@ public class WhoisRestServiceTestIntegration extends AbstractIntegrationTest {
         assertThat(whoisResources.getErrorMessages(), is(empty()));
         final WhoisObject whoisObject = whoisResources.getWhoisObjects().get(0);
         assertThat(whoisObject.getPrimaryKey().get(0).getValue(), is("2001:2002:2003::/48"));
+    }
+
+    @Test
+    public void test_text_plain() {
+        databaseHelper.addObject(
+            "inet6num:       2001:2002:2003::/48\n" +
+                "netname:        RIPE-NCC\n" +
+                "descr:          Private Network 1\n" +
+                "country:        NL\n" +
+                "tech-c:         TP1-TEST\n" +
+                "status:         ASSIGNED PA\n" +
+                "mnt-by:         OWNER-MNT\n" +
+                "mnt-lower:      OWNER-MNT\n" +
+                "source:         TEST"
+        );
+//        databaseHelper.addObject(
+//            "inet6num:       2001:2002:2003:4::/50\n" +
+//                "netname:        RIPE-NCC\n" +
+//                "descr:          Private Network 2\n" +
+//                "country:        NL\n" +
+//                "tech-c:         TP1-TEST\n" +
+//                "status:         ASSIGNED PA\n" +
+//                "mnt-by:         OWNER-MNT\n" +
+//                "mnt-lower:      OWNER-MNT\n" +
+//                "source:         TEST"
+//        );
+//        databaseHelper.addObject(
+//            "inet6num:       2001:2002:2003:8::/50\n" +
+//                "netname:        RIPE-NCC\n" +
+//                "descr:          Private Network 3\n" +
+//                "country:        NL\n" +
+//                "tech-c:         TP1-TEST\n" +
+//                "status:         ASSIGNED PA\n" +
+//                "mnt-by:         OWNER-MNT\n" +
+//                "mnt-lower:      OWNER-MNT\n" +
+//                "source:         TEST"
+//        );
+        ipTreeUpdater.rebuild();
+
+        final Response response = RestTest
+            .target(getPort(), "whois/test/inet6num/2001:2002:2003::/48")
+            .request(MediaType.TEXT_PLAIN_TYPE)
+            .get();
+
+        assertEquals("", response.readEntity(String.class));
     }
 
     @Test
