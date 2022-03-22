@@ -4,6 +4,7 @@ import org.apache.commons.mail.util.IDNEmailAddressConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.IDN;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,7 +49,7 @@ public class PunycodeConversion {
 
     public static String toAscii(final String address) {
         try {
-            return CONVERTER.toASCII(address);
+            return IDN.toASCII(address);
         } catch (Exception e) {
             LOGGER.warn("Unable to convert {} to Punycode due to {}: {}", address, e.getClass().getName(), e.getMessage());
             return address;
